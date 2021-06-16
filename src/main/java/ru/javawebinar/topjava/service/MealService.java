@@ -1,9 +1,23 @@
 package ru.javawebinar.topjava.service;
 
-import ru.javawebinar.topjava.repository.MealRepository;
+import ru.javawebinar.topjava.model.Meal;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-public class MealService {
+import java.time.LocalDate;
+import java.util.List;
 
-    private MealRepository repository;
+public interface MealService {
+
+    Meal create(int userId, Meal meal);
+
+    void delete(int userId, int id) throws NotFoundException;
+
+    Meal get(int userId, int id) throws NotFoundException;
+
+    void update(int userId, Meal meal);
+
+    List<Meal> getAll(int userId);
+
+    List<Meal> getFilterDate(int userId, LocalDate startDate, LocalDate endDate);
 
 }

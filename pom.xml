@@ -60,6 +60,14 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
             <version>${spring.version}</version>
+
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+
         </dependency>
 
         <!--Web-->
@@ -75,6 +83,7 @@
             <artifactId>jstl</artifactId>
             <version>1.2</version>
         </dependency>
+
     </dependencies>
 
     <profiles>
