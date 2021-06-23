@@ -7,13 +7,20 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import ru.javawebinar.topjava.UserTestData;
+import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.inmemory.InMemoryUserRepository;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-import static ru.javawebinar.topjava.UserTestData.NOT_FOUND;
-import static ru.javawebinar.topjava.UserTestData.USER_ID;
+import java.util.Collection;
 
-@ContextConfiguration("classpath:spring/spring-app.xml")
+import static ru.javawebinar.topjava.UserTestData.*;
+import static ru.javawebinar.topjava.model.Role.ADMIN;
+
+@ContextConfiguration({
+        "classpath:spring/spring-app.xml",
+        "classpath:spring/spring-test-app.xml"
+})
 @RunWith(SpringRunner.class)
 public class InMemoryAdminRestControllerSpringTest {
 
@@ -29,13 +36,15 @@ public class InMemoryAdminRestControllerSpringTest {
     }
 
     @Test
-    public void delete() {
-        controller.delete(USER_ID);
-        Assert.assertNull(repository.get(USER_ID));
+    public void delete() throws Exception{
+        controller.delete(UserTestData.USER_ID);
+        Collection<User> users = controller.getAll();
+        Assert.assertEquals(users.size(), 1);
+        Assert.assertEquals(users.iterator().next(), ADMIN);
     }
 
-    @Test
+    @Test(expected = NotFoundException.class)
     public void deleteNotFound() {
-        Assert.assertThrows(NotFoundException.class, () -> controller.delete(NOT_FOUND));
+        controller.delete(10);
     }
 }

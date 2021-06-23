@@ -14,6 +14,8 @@ import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertThrows;
@@ -37,59 +39,58 @@ public class UserServiceTest {
     private UserService service;
 
     @Test
-    public void create() {
-        User created = service.create(getNew());
-        Integer newId = created.getId();
-        User newUser = getNew();
-        newUser.setId(newId);
-        assertMatch(created, newUser);
-        assertMatch(service.get(newId), newUser);
+    public void create() throws Exception {
+        User newUser = new User(null, "New", "new@gmail.com", "newPass", 1555, false, new Date(), Collections.singleton(Role.USER));
+        User created = service.create(newUser);
+        newUser.setId(created.getId());
+        assertMatch(service.getAll(), ADMIN, newUser, USER);
     }
 
-    @Test
+    @Test(expected = DataAccessException.class)
     public void duplicateMailCreate() {
-        assertThrows(DataAccessException.class, () ->
-                service.create(new User(null, "Duplicate", "user@yandex.ru", "newPass", Role.USER)));
+        service.create(new User(null, "Duplicate", "user@yandex.ru", "newPass", Role.USER));
     }
 
     @Test
-    public void delete() {
+    public void delete() throws Exception {
         service.delete(USER_ID);
-        assertThrows(NotFoundException.class, () -> service.get(USER_ID));
+        assertMatch(service.getAll(), ADMIN);
     }
 
-    @Test
+    @Test(expected = NotFoundException.class)
     public void deletedNotFound() {
-        assertThrows(NotFoundException.class, () -> service.delete(NOT_FOUND));
+        service.delete(1);
     }
 
     @Test
-    public void get() {
+    public void get()throws Exception {
         User user = service.get(USER_ID);
-        assertMatch(user, UserTestData.user);
+        assertMatch(user, USER);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void getNotFound()throws Exception {
+       service.get(1);
     }
 
     @Test
-    public void getNotFound() {
-        assertThrows(NotFoundException.class, () -> service.get(NOT_FOUND));
+    public void getByEmail()throws Exception {
+        User user = service.getByEmail("user@yandex.ru");
+        assertMatch(user, USER);
     }
 
     @Test
-    public void getByEmail() {
-        User user = service.getByEmail("admin@gmail.com");
-        assertMatch(user, admin);
-    }
-
-    @Test
-    public void update() {
-        User updated = getUpdated();
+    public void update()throws Exception {
+        User updated = new User(USER);
+        updated.setName("UpdatedName");
+        updated.setCaloriesPerDay(330);
         service.update(updated);
-        assertMatch(service.get(USER_ID), getUpdated());
+        assertMatch(service.get(USER_ID), updated);
     }
 
     @Test
     public void getAll() {
         List<User> all = service.getAll();
-        assertMatch(all, admin, user);
+        assertMatch(all, ADMIN, USER);
     }
 }

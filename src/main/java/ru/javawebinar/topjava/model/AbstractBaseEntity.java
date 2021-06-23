@@ -26,8 +26,9 @@ public abstract class AbstractBaseEntity {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + id;
+        return String.format("Entity %s (%s)", getClass().getName(), id);
     }
+
 
     @Override
     public boolean equals(Object o) {
