@@ -40,17 +40,28 @@ public class MealServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        Meal meal = new Meal(
-                LocalDateTime.parse(request.getParameter("dateTime")),
-                request.getParameter("description"),
-                Integer.parseInt(request.getParameter("calories")));
+        String action = request.getParameter("action");
+        if (action == null) {
+            Meal meal = new Meal(
+                    LocalDateTime.parse(request.getParameter("dateTime")),
+                    request.getParameter("description"),
+                    Integer.parseInt(request.getParameter("calories")));
 
-        if (StringUtils.hasLength(request.getParameter("id"))) {
-            mealController.update(meal, getId(request));
-        } else {
-            mealController.create(meal);
+            if (request.getParameter("id").isEmpty()) {
+                mealController.create(meal);
+            } else {
+                mealController.update(meal, getId(request));
+            }
+            response.sendRedirect("meals");
+
+        } else if ("filter".equals(action)) {
+            LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
+            LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
+            LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
+            LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
+            request.setAttribute("meals", mealController.getBetween(startDate, startTime, endDate, endTime));
+            request.getRequestDispatcher("/meals.jsp").forward(request, response);
         }
-        response.sendRedirect("meals");
     }
 
     @Override

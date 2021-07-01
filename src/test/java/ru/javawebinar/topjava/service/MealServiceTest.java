@@ -1,18 +1,28 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.Stopwatch;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.MealTestData.*;
@@ -23,12 +33,45 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
         "classpath:spring/spring-app.xml",
         "classpath:spring/spring-db.xml"
 })
-@RunWith(SpringRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(MealServiceTest.class);
+
+    private static StringBuilder result = new StringBuilder();
+
+    static {
+        SLF4JBridgeHandler.install();
+    }
+
+    //http://blog.qatools.ru/junit/junit-rules-tutorial#expectedexcptn
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    // https://junit.org/junit4/javadoc/4.12/org/junit/rules/Stopwatch.html
+    @Rule
+    public Stopwatch stopwatch = new Stopwatch() {
+        @Override
+        protected void finished(long nanos, Description description) {
+            String resultFormat = String.format(
+                    "\n%-20s finished: %5d ms",
+                    description.getMethodName(),
+                    TimeUnit.NANOSECONDS.toMillis(nanos));
+            result.append(resultFormat);
+            log.info(resultFormat);
+        }
+    };
+
     @Autowired
     private MealService service;
+
+    @AfterClass
+    public static void printResult() {
+        log.info("\n------------------------" +
+                result +
+                "\n-------------------------");
+    }
 
     @Test
     public void delete() {
@@ -46,15 +89,6 @@ public class MealServiceTest {
         assertThrows(NotFoundException.class, () -> service.delete(MEAL1_ID, ADMIN_ID));
     }
 
-    @Test
-    public void create() {
-        Meal created = service.create(getNew(), USER_ID);
-        int newId = created.id();
-        Meal newMeal = getNew();
-        newMeal.setId(newId);
-        MATCHER.assertMatch(created, newMeal);
-        MATCHER.assertMatch(service.get(newId, USER_ID), newMeal);
-    }
 
     @Test
     public void duplicateDateTimeCreate() {
@@ -66,7 +100,10 @@ public class MealServiceTest {
     @Test
     public void get() {
         Meal actual = service.get(ADMIN_MEAL_ID, ADMIN_ID);
-        MATCHER.assertMatch(actual, adminMeal1);
+
+        // org.hibernate.LazyInitializationException: could not initialize proxy - no Session
+        // http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#field-by-field-comparison
+       MATCHER.assertMatch(actual, ADMIN_MEAL1);
     }
 
     @Test
@@ -83,13 +120,7 @@ public class MealServiceTest {
     public void update() {
         Meal updated = getUpdated();
         service.update(updated, USER_ID);
-        MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), getUpdated());
-    }
-
-    @Test
-    public void updateNotOwn() {
-        assertThrows(NotFoundException.class, () -> service.update(meal1, ADMIN_ID));
-        MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), meal1);
+        MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), updated);
     }
 
     @Test
@@ -99,14 +130,11 @@ public class MealServiceTest {
 
     @Test
     public void getBetweenInclusive() {
-        MATCHER.assertMatch(service.getBetweenInclusive(
+        MATCHER.assertMatch(service.getBetweenDates(
                 LocalDate.of(2020, Month.JANUARY, 30),
                 LocalDate.of(2020, Month.JANUARY, 30), USER_ID),
                 meal3, meal2, meal1);
     }
 
-    @Test
-    public void getBetweenWithNullDates() {
-        MATCHER.assertMatch(service.getBetweenInclusive(null, null, USER_ID), meals);
-    }
+
 }
