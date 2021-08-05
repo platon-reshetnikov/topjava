@@ -2,7 +2,6 @@ package ru.javawebinar.topjava.model;
 
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Persistable;
-import org.springframework.util.Assert;
 
 import javax.persistence.*;
 
@@ -15,6 +14,7 @@ public abstract class AbstractBaseEntity implements Persistable<Integer> {
     @Id
     @SequenceGenerator(name = "global_seq", sequenceName = "global_seq", allocationSize = 1, initialValue = START_SEQ)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "global_seq")
+
 //  See https://hibernate.atlassian.net/browse/HHH-3718 and https://hibernate.atlassian.net/browse/HHH-12034
 //  Proxy initialization when accessing its identifier managed now by JPA_PROXY_COMPLIANCE setting
     protected Integer id;
@@ -35,11 +35,6 @@ public abstract class AbstractBaseEntity implements Persistable<Integer> {
         return id;
     }
 
-    public int id() {
-        Assert.notNull(id, "Entity must have id");
-        return id;
-    }
-
     @Override
     public boolean isNew() {
         return this.id == null;
@@ -47,8 +42,9 @@ public abstract class AbstractBaseEntity implements Persistable<Integer> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + id;
+        return String.format("Entity %s (%s)", getClass().getName(), id);
     }
+
 
     @Override
     public boolean equals(Object o) {

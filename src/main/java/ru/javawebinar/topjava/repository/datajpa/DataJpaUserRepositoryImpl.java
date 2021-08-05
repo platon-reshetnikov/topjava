@@ -8,12 +8,12 @@ import ru.javawebinar.topjava.repository.UserRepository;
 import java.util.List;
 
 @Repository
-public class DataJpaUserRepository implements UserRepository {
+public class DataJpaUserRepositoryImpl implements UserRepository {
     private static final Sort SORT_NAME_EMAIL = Sort.by(Sort.Direction.ASC, "name", "email");
 
     private final CrudUserRepository crudRepository;
 
-    public DataJpaUserRepository(CrudUserRepository crudRepository) {
+    public DataJpaUserRepositoryImpl(CrudUserRepository crudRepository) {
         this.crudRepository = crudRepository;
     }
 
@@ -40,5 +40,10 @@ public class DataJpaUserRepository implements UserRepository {
     @Override
     public List<User> getAll() {
         return crudRepository.findAll(SORT_NAME_EMAIL);
+    }
+
+    @Override
+    public User getUserMeals(int id) {
+        return crudRepository.getUserMeals(id);
     }
 }

@@ -4,17 +4,20 @@ package ru.javawebinar.topjava.util;
 import ru.javawebinar.topjava.model.AbstractBaseEntity;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-public class ValidationUtil {
-    private ValidationUtil() {
-    }
+import ru.javawebinar.topjava.model.AbstractBaseEntity;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-    public static <T> T checkNotFoundWithId(T object, int id) {
-        checkNotFoundWithId(object != null, id);
-        return object;
+public class ValidationUtil {
+
+    private ValidationUtil() {
     }
 
     public static void checkNotFoundWithId(boolean found, int id) {
         checkNotFound(found, "id=" + id);
+    }
+
+    public static <T> T checkNotFoundWithId(T object, int id) {
+        return checkNotFound(object, "id=" + id);
     }
 
     public static <T> T checkNotFound(T object, String msg) {
@@ -35,10 +38,10 @@ public class ValidationUtil {
     }
 
     public static void assureIdConsistent(AbstractBaseEntity entity, int id) {
-//      conservative when you reply, but accept liberally (http://stackoverflow.com/a/32728226/548473)
+//      http://stackoverflow.com/a/32728226/548473
         if (entity.isNew()) {
             entity.setId(id);
-        } else if (entity.id() != id) {
+        } else if (entity.getId() != id) {
             throw new IllegalArgumentException(entity + " must be with id=" + id);
         }
     }
