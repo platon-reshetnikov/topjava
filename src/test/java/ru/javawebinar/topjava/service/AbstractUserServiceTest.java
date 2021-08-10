@@ -5,18 +5,14 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataAccessException;
-import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-import javax.validation.ConstraintViolationException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import ru.javawebinar.topjava.repository.JpaUtil;
 
-import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.UserTestData.*;
 
 public abstract class AbstractUserServiceTest extends AbstractServiceTest {
@@ -27,78 +23,77 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     @Autowired
     private CacheManager cacheManager;
 
-    @Autowired
-    protected JpaUtil jpaUtil;
-
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
         cacheManager.getCache("users").clear();
-        jpaUtil.clear2ndLevelHibernateCache();
     }
 
     @Test
-    public void create() {
-        User created = service.create(getNew());
-        int newId = created.id();
-        User newUser = getNew();
-        newUser.setId(newId);
-        MATCHER.assertMatch(created, newUser);
-        MATCHER.assertMatch(service.get(newId), newUser);
+    public void create() throws Exception {
+        User newUser = new User(null, "New", "new@gmail.com", "newPass", 1555, false, new Date(), Collections.singleton(Role.USER));
+        User created = service.create(newUser);
+        newUser.setId(created.getId());
+        assertMatch(service.getAll(), ADMIN, newUser, USER);
+    }
+
+    @Test(expected = DataAccessException.class)
+    public void duplicateMailCreate() throws Exception {
+        service.create(new User(null, "Duplicate", "user@yandex.ru", "newPass", Role.USER));
     }
 
     @Test
-    public void duplicateMailCreate() {
-        assertThrows(DataAccessException.class, () ->
-                service.create(new User(null, "Duplicate", "user@yandex.ru", "newPass", Role.USER)));
-    }
-
-    @Test
-    public void delete() {
+    public void delete() throws Exception {
         service.delete(USER_ID);
-        assertThrows(NotFoundException.class, () -> service.get(USER_ID));
+        assertMatch(service.getAll(), ADMIN);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void notFoundDelete() throws Exception {
+        service.delete(1);
     }
 
     @Test
-    public void deletedNotFound() {
-        assertThrows(NotFoundException.class, () -> service.delete(NOT_FOUND));
-    }
-
-    @Test
-    public void get() {
+    public void get() throws Exception {
         User user = service.get(USER_ID);
-        MATCHER.assertMatch(user, UserTestData.user);
+        assertMatch(user, USER);
     }
 
     @Test
-    public void getNotFound() {
-        assertThrows(NotFoundException.class, () -> service.get(NOT_FOUND));
+    public void getAdmin() throws Exception {
+        User admin = service.get(ADMIN_ID);
+        assertMatch(admin, ADMIN);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void getNotFound() throws Exception {
+        service.get(1);
     }
 
     @Test
-    public void getByEmail() {
-        User user = service.getByEmail("admin@gmail.com");
-        MATCHER.assertMatch(user, admin);
+    public void getByEmail() throws Exception {
+        User user = service.getByEmail("user@yandex.ru");
+        assertMatch(user, USER);
     }
 
     @Test
-    public void update() {
-        User updated = getUpdated();
+    public void getAdminByEmail() throws Exception {
+        User admin = service.getByEmail("admin@gmail.com");
+        assertMatch(admin, ADMIN);
+    }
+
+    @Test
+    public void update() throws Exception {
+        User updated = new User(USER);
+        updated.setName("UpdatedName");
+        updated.setCaloriesPerDay(330);
+        updated.setRoles(Collections.singletonList(Role.ADMIN));
         service.update(updated);
-        MATCHER.assertMatch(service.get(USER_ID), getUpdated());
+        assertMatch(service.get(USER_ID), updated);
     }
 
     @Test
-    public void getAll() {
+    public void getAll() throws Exception {
         List<User> all = service.getAll();
-        MATCHER.assertMatch(all, admin, user);
-    }
-
-    @Test
-    public void createWithException() throws Exception {
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "  ", "mail@yandex.ru", "password", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "  ", "password", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "  ", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "password", 9, true, new Date(), Set.of())));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "password", 10001, true, new Date(), Set.of())));
+        assertMatch(all, ADMIN, USER);
     }
 }

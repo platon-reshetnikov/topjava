@@ -5,7 +5,6 @@ import ru.javawebinar.topjava.model.User;
 import java.util.List;
 
 public interface UserRepository {
-    // null if not found, when updated
     User save(User user);
 
     // false if not found
@@ -19,7 +18,7 @@ public interface UserRepository {
 
     List<User> getAll();
 
-    default User getWithMeals(int id) {
+    default User getWithMeals(int id){
         throw new UnsupportedOperationException();
     }
 }

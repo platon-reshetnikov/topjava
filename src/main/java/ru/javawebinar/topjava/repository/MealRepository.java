@@ -25,3 +25,4 @@ public interface MealRepository {
         throw new UnsupportedOperationException();
     }
 }
+
