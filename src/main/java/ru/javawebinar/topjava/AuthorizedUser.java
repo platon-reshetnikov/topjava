@@ -1,25 +1,21 @@
-package ru.javawebinar.topjava.web;
+package ru.javawebinar.topjava;
 
 import ru.javawebinar.topjava.model.AbstractBaseEntity;
 
 import static ru.javawebinar.topjava.util.MealsUtil.DEFAULT_CALORIES_PER_DAY;
 
-public class SecurityUtil {
-
+public class AuthorizedUser {
     private static int id = AbstractBaseEntity.START_SEQ;
 
-    private SecurityUtil() {
-    }
-
-    public static int authUserId() {
+    public static int id() {
         return id;
     }
 
-    public static void setAuthUserId(int id) {
-        SecurityUtil.id = id;
+    public static void setId(int id) {
+        AuthorizedUser.id = id;
     }
 
-    public static int authUserCaloriesPerDay() {
+    public static int getCaloriesPerDay() {
         return DEFAULT_CALORIES_PER_DAY;
     }
 }

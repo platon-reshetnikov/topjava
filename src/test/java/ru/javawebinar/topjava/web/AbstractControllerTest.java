@@ -1,29 +1,35 @@
 package ru.javawebinar.topjava.web;
 
+
+import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import ru.javawebinar.topjava.AllActiveProfileResolver;
+import ru.javawebinar.topjava.repository.JpaUtil;
+import ru.javawebinar.topjava.service.UserService;
 
 import javax.annotation.PostConstruct;
 
-@SpringJUnitWebConfig(locations = {
+@ContextConfiguration({
         "classpath:spring/spring-app.xml",
         "classpath:spring/spring-mvc.xml",
         "classpath:spring/spring-db.xml"
 })
-//@WebAppConfiguration
-//@ExtendWith(SpringExtension.class)
+@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
 @ActiveProfiles(resolver = AllActiveProfileResolver.class)
-public abstract class AbstractControllerTest {
+abstract public class AbstractControllerTest {
 
     private static final CharacterEncodingFilter CHARACTER_ENCODING_FILTER = new CharacterEncodingFilter();
 
@@ -32,7 +38,16 @@ public abstract class AbstractControllerTest {
         CHARACTER_ENCODING_FILTER.setForceEncoding(true);
     }
 
-    private MockMvc mockMvc;
+    protected MockMvc mockMvc;
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired(required = false)
+    private JpaUtil jpaUtil;
+
+    @Autowired
+    protected UserService userService;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -45,7 +60,11 @@ public abstract class AbstractControllerTest {
                 .build();
     }
 
-    protected ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
-        return mockMvc.perform(builder);
+    @Before
+    public void setUp() {
+        cacheManager.getCache("users").clear();
+        if (jpaUtil != null) {
+            jpaUtil.clear2ndLevelHibernateCache();
+        }
     }
 }

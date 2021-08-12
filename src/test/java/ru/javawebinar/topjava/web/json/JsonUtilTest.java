@@ -12,17 +12,17 @@ class JsonUtilTest {
 
     @Test
     void readWriteValue() {
-        String json = JsonUtil.writeValue(adminMeal1);
+        String json = JsonUtil.writeValue(ADMIN_MEAL1);
         System.out.println(json);
         Meal meal = JsonUtil.readValue(json, Meal.class);
-        MATCHER.assertMatch(meal, adminMeal1);
+        assertMatch(meal, ADMIN_MEAL1);
     }
 
     @Test
     void readWriteValues() {
-        String json = JsonUtil.writeValue(meals);
+        String json = JsonUtil.writeValue(MEALS);
         System.out.println(json);
         List<Meal> meals = JsonUtil.readValues(json, Meal.class);
-        MATCHER.assertMatch(meals, MealTestData.meals);
+        assertMatch(meals, MEALS);
     }
 }
