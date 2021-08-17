@@ -1,58 +1,26 @@
 package ru.javawebinar.topjava.service;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
+
 import ru.javawebinar.topjava.model.User;
-import ru.javawebinar.topjava.repository.UserRepository;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.util.List;
 
-import static ru.javawebinar.topjava.util.ValidationUtil.checkNotFound;
-import static ru.javawebinar.topjava.util.ValidationUtil.checkNotFoundWithId;
+public interface UserService {
 
-@Service
-public class UserService {
+    User create(User user);
 
-    private final UserRepository repository;
+    void delete(int id) throws NotFoundException;
 
-    public UserService(UserRepository repository) {
-        this.repository = repository;
-    }
+    User get(int id) throws NotFoundException;
 
-    @CacheEvict(value = "users", allEntries = true)
-    public User create(User user) {
-        Assert.notNull(user, "user must not be null");
-        return repository.save(user);
-    }
+    User getByEmail(String email) throws NotFoundException;
 
-    @CacheEvict(value = "users", allEntries = true)
-    public void delete(int id) {
-        checkNotFoundWithId(repository.delete(id), id);
-    }
+    void update(User user);
 
-    public User get(int id) {
-        return checkNotFoundWithId(repository.get(id), id);
-    }
+    List<User> getAll();
 
-    public User getByEmail(String email) {
-        Assert.notNull(email, "email must not be null");
-        return checkNotFound(repository.getByEmail(email), "email=" + email);
-    }
+    User getWithMeals(int id);
 
-    @Cacheable("users")
-    public List<User> getAll() {
-        return repository.getAll();
-    }
-
-    @CacheEvict(value = "users", allEntries = true)
-    public void update(User user) {
-        Assert.notNull(user, "user must not be null");
-        checkNotFoundWithId(repository.save(user), user.id());
-    }
-
-    public User getWithMeals(int id) {
-        return checkNotFoundWithId(repository.getWithMeals(id), id);
-    }
+    void enable(int id, boolean enable);
 }
